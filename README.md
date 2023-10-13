@@ -2,7 +2,9 @@
 
 ## 使用halo2实现的一些Examples
 
-- 官方的 simple example
+### [simple example](./simple/src/main.rs)
+
+实现 a^2 * b^2 = c
 
 ## 附录：Halo2 资料整理
 
