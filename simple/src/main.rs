@@ -323,7 +323,7 @@ fn main() {
     println!("res1: {:?}", res1);
 
     /// 使用错误的 public input（没有乘以常数）
-    /// 将会严重失败
+    /// 将会验证失败
     let d = a.square() * b.square();
     public_input = vec![d];
     let prover2 = MockProver::run(row, &my_circuit, vec![public_input]).unwrap();
