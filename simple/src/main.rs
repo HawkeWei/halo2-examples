@@ -145,7 +145,7 @@ impl<F: Field> Chip<F> for SimpleChip<F> {
 }
 
 /// 接着为 SimpleChip实现自定义的 NumInstructions Trait
-/// 定义辅助结构体 ACell，用于简化与电路中单元格的交互：
+/// 定义tuple struct ACell，用于简化与电路中单元格的交互：
 /// 1、通过使用 ACell，我们为用户提供了一个简化和更直观的接口，使他们可以更容易地与已分配的单元格进行交互，而不必每次都直接处理 AssignedCell
 /// 2、将来，如果我们想在 ACell 中添加更多的功能或属性，可以不影响现有的代码
 #[derive(Clone, Debug)]
@@ -199,7 +199,7 @@ impl<F: Field> NumInstructions<F> for SimpleChip<F> {
                 /// 官方解释：给我们的输入(a: Self::Num / b: Self::Num,) 有可能在电路的任何位置.
                 /// 但在region 中，我们只能依靠相对偏移。所以我们需要在 region 内分配新的 cells
                 /// 并限制新分配的 cells 的值 与输入(a: Self::Num / b: Self::Num,) 的值相等。
-                /// 即使用拷贝约束？
+                /// copy_advice：将值复制到给定的advice cell并约束它们相等
                 a.0.copy_advice(|| "lhs", &mut region, config.advice[0], 0);
                 b.0.copy_advice(|| "rhs", &mut region, config.advice[1], 0);
                 /// 计算乘积

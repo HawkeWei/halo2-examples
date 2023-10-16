@@ -35,6 +35,10 @@ Assignment是一个电路赋值的接口。
 
 实现 a^2 * b^2 = c
 
+### [fabonacci](./fibonacci/src/main.rs)
+
+参考 [0xparc Halo2 课程](https://learn.0xparc.org/materials/halo2/learning-group-1/halo2-api)
+
 ## 附录：Halo2 资料整理
 
 - [halo2 book](https://zcash.github.io/halo2/design/proving-system.html)
