@@ -145,11 +145,13 @@ impl<F: Field> Chip<F> for SimpleChip<F> {
 }
 
 /// 接着为 SimpleChip实现自定义的 NumInstructions Trait
-/// 先定义一个Number 结构体，表示指定的单元格
-// #[derive(Clone)]
-// struct Number<F: Field>(AssignedCell<F, F>);
+/// 定义辅助结构体 ACell，用于简化与电路中单元格的交互：
+/// 1、通过使用 ACell，我们为用户提供了一个简化和更直观的接口，使他们可以更容易地与已分配的单元格进行交互，而不必每次都直接处理 AssignedCell
+/// 2、将来，如果我们想在 ACell 中添加更多的功能或属性，可以不影响现有的代码
+#[derive(Clone, Debug)]
+struct ACell<F: Field>(AssignedCell<F, F>);
 impl<F: Field> NumInstructions<F> for SimpleChip<F> {
-    type Num = AssignedCell<F, F>;
+    type Num = ACell<F>;
     fn load_private(
         &self,
         mut layouter: impl Layouter<F>,
@@ -158,7 +160,11 @@ impl<F: Field> NumInstructions<F> for SimpleChip<F> {
         let config = self.config();
         layouter.assign_region(
             || "load_private",
-            |mut region| region.assign_advice(|| "private input", config.advice[0], 0, || a),
+            |mut region| {
+                region
+                    .assign_advice(|| "private input", config.advice[0], 0, || a)
+                    .map(ACell)
+            },
         )
     }
 
@@ -171,12 +177,9 @@ impl<F: Field> NumInstructions<F> for SimpleChip<F> {
         layouter.assign_region(
             || "load_constant",
             |mut region| {
-                region.assign_advice_from_constant(
-                    || "constant value",
-                    config.advice[0],
-                    0,
-                    constant,
-                )
+                region
+                    .assign_advice_from_constant(|| "constant value", config.advice[0], 0, constant)
+                    .map(ACell)
             },
         )
     }
@@ -197,12 +200,14 @@ impl<F: Field> NumInstructions<F> for SimpleChip<F> {
                 /// 但在region 中，我们只能依靠相对偏移。所以我们需要在 region 内分配新的 cells
                 /// 并限制新分配的 cells 的值 与输入(a: Self::Num / b: Self::Num,) 的值相等。
                 /// 即使用拷贝约束？
-                a.copy_advice(|| "lhs", &mut region, config.advice[0], 0);
-                b.copy_advice(|| "rhs", &mut region, config.advice[1], 0);
+                a.0.copy_advice(|| "lhs", &mut region, config.advice[0], 0);
+                b.0.copy_advice(|| "rhs", &mut region, config.advice[1], 0);
                 /// 计算乘积
-                let res = a.value().copied() * b.value();
+                let res = a.0.value().copied() * b.0.value();
                 /// 对输出赋值，cell所在位置在config中定义过，这里使用相对位置定位
-                region.assign_advice(|| "lhs * rhs", config.advice[0], 1, || res)
+                region
+                    .assign_advice(|| "lhs * rhs", config.advice[0], 1, || res)
+                    .map(ACell)
             },
         )
     }
@@ -214,7 +219,7 @@ impl<F: Field> NumInstructions<F> for SimpleChip<F> {
         row: usize,
     ) -> Result<(), Error> {
         let config = self.config();
-        layouter.constrain_instance(c.cell(), config.instance, row)
+        layouter.constrain_instance(c.0.cell(), config.instance, row)
     }
 }
 
