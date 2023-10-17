@@ -1,10 +1,10 @@
-#![allow(unused)]
+// #![allow(unused)]
 use group::ff::Field;
 use halo2_proofs::{
-    circuit::{AssignedCell, Chip, Layouter, Region, SimpleFloorPlanner, Value},
+    circuit::{AssignedCell, Layouter, SimpleFloorPlanner},
     dev::MockProver,
     pasta::Fp,
-    plonk::{Advice, Circuit, Column, ConstraintSystem, Error, Fixed, Instance, Selector},
+    plonk::{Advice, Circuit, Column, ConstraintSystem, Error, Instance, Selector},
     poly::Rotation,
 };
 use std::marker::PhantomData;
@@ -85,8 +85,8 @@ impl<F: Field> FibonacciChip<F> {
         layouter.assign_region(
             || "first row",
             |mut region| {
-                // 激活加法
-                self.config.selector.enable(&mut region, 0);
+                // 激活加法，?将错误return，消除unused的警告
+                self.config.selector.enable(&mut region, 0)?;
                 // f(0) = 1
                 let a = region
                     .assign_advice_from_instance(
@@ -130,7 +130,8 @@ impl<F: Field> FibonacciChip<F> {
         layouter.assign_region(
             || "next row",
             |mut region| {
-                self.config.selector.enable(&mut region, 0);
+                // ?将错误return，消除unused的警告
+                self.config.selector.enable(&mut region, 0)?;
                 // 拷贝约束，本次的a = 前一次的b，本次的b = 前一次的c
                 pre_b
                     .0
@@ -147,7 +148,7 @@ impl<F: Field> FibonacciChip<F> {
                         || pre_b.0.value().copied() + pre_c.0.value(),
                     )
                     .map(ACell)?;
-                Ok((c))
+                Ok(c)
             },
         )
     }
@@ -225,10 +226,16 @@ fn main() {
     // 用隐私输入实例化电路，这里没有隐私输入，所以输入占位符
     let circuit: FibonacciCircuit<Fp> = FibonacciCircuit(PhantomData);
 
-    let mut public_input = vec![a, b, out];
+    let public_input = vec![a, b, out];
 
     let prover = MockProver::run(row, &circuit, vec![public_input]).unwrap();
     // println!("res1: {:?}", prover);
-    let res1 = prover.verify();
-    println!("res1: {:?}", res1);
+    let res = prover.verify();
+    println!("res1: {:?}", res);
+
+    let out_2 = Fp::from(56);
+    let public_input_2 = vec![a, b, out_2];
+    let prover_2 = MockProver::run(row, &circuit, vec![public_input_2]).unwrap();
+    let res_2 = prover_2.verify();
+    println!("res2: {:?}", res_2);
 }
