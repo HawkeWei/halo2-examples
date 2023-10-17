@@ -3,3 +3,5 @@ members = [
     "simple",
     "fibonacci",
 ]
+
+resolver = "2"

@@ -49,6 +49,10 @@ impl<F: Field> FibonacciChip<F> {
         instance: Column<Instance>,
     ) -> FibonacciConfig {
         meta.enable_equality(instance);
+        // 启用强制执行指定列中的单元格相等的功能，否则报错：Err(ColumnNotInPermutation(Column { index: 0, column_type: Advice }))
+        meta.enable_equality(advice[0]);
+        meta.enable_equality(advice[1]);
+        meta.enable_equality(advice[2]);
 
         let selector = meta.selector();
 
@@ -177,7 +181,11 @@ impl<F: Field> Circuit<F> for FibonacciCircuit<F> {
 
     /// 输入约束系统，输出之前自定义的 simpleConfig
     fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
-        let advice = [meta.advice_column(); 3];
+        let advice = [
+            meta.advice_column(),
+            meta.advice_column(),
+            meta.advice_column(),
+        ];
         let instance = meta.instance_column();
 
         FibonacciChip::configure(meta, advice, instance)
@@ -199,7 +207,7 @@ impl<F: Field> Circuit<F> for FibonacciCircuit<F> {
             pre_c = c;
         }
 
-        fibonacci_chip.expose_public(layouter.namespace(|| "out"), &pre_c, 0)?;
+        fibonacci_chip.expose_public(layouter.namespace(|| "out"), &pre_c, 2)?;
 
         Ok(())
     }
@@ -210,14 +218,17 @@ fn main() {
     // 定义电路的行数
     let row = 4;
 
+    let a = Fp::from(1);
+    let b = Fp::from(1);
     let out = Fp::from(55);
 
     // 用隐私输入实例化电路，这里没有隐私输入，所以输入占位符
     let circuit: FibonacciCircuit<Fp> = FibonacciCircuit(PhantomData);
 
-    let mut public_input = vec![out];
+    let mut public_input = vec![a, b, out];
 
     let prover = MockProver::run(row, &circuit, vec![public_input]).unwrap();
+    // println!("res1: {:?}", prover);
     let res1 = prover.verify();
     println!("res1: {:?}", res1);
 }
