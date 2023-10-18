@@ -60,6 +60,6 @@ fn test_version_2() {
 }
 fn main() {
     test_version_1();
-
+    println!("-------------------------");
     test_version_2();
 }

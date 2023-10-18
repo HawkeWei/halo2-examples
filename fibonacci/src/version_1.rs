@@ -72,21 +72,18 @@ impl<F: Field> FibonacciChip<F> {
     }
     ///////////////////////////////////////////////////////////////////////
     /// 实现芯片的核心功能：
-    /// 1、初始化第一行（1，1，2）
+    /// 1、初始化第一行为固定值（1，1，2）
     /// 2、根据 Fibonacci 数列的特性，进行循环赋值和计算
     /// 3、expose public
-    pub fn assign_first_row(
-        &self,
-        mut layouter: impl Layouter<F>,
-    ) -> Result<(ACell<F>, ACell<F>, ACell<F>), Error> {
-        // let mut config = self.config();
+
+    pub fn assign_row(&self, mut layouter: impl Layouter<F>, n: usize) -> Result<ACell<F>, Error> {
         layouter.assign_region(
-            || "first row",
+            || "next row",
             |mut region| {
-                // 激活加法，?将错误return，消除unused的警告
+                // ?将错误return，消除unused的警告
                 self.config.selector.enable(&mut region, 0)?;
-                // f(0) = 1, 从 instance(public input)中获取
-                let a = region
+                // 拷贝约束，本次的a = 前一次的b，本次的b = 前一次的c
+                let mut a = region
                     .assign_advice_from_instance(
                         || "f(0)",
                         self.config.instance,
@@ -96,7 +93,7 @@ impl<F: Field> FibonacciChip<F> {
                     )
                     .map(ACell)?;
                 // f(1) = 1, 从 instance(public input)中获取
-                let b = region
+                let mut b = region
                     .assign_advice_from_instance(
                         || "f(1)",
                         self.config.instance,
@@ -105,48 +102,39 @@ impl<F: Field> FibonacciChip<F> {
                         0,
                     )
                     .map(ACell)?;
-                // f(2) = f(0) + f(1)
-                let c = region
+
+                let mut c = region
                     .assign_advice(
                         || "f(2)",
                         self.config.advice[2],
                         0,
-                        || a.0.value().copied() + b.0.value(),
+                        || a.0.value().copied() + b.0.value().copied(),
                     )
                     .map(ACell)?;
-                Ok((a, b, c))
-            },
-        )
-    }
-
-    pub fn assign_row(
-        &self,
-        mut layouter: impl Layouter<F>,
-        pre_b: &ACell<F>,
-        pre_c: &ACell<F>,
-    ) -> Result<ACell<F>, Error> {
-        layouter.assign_region(
-            || "next row",
-            |mut region| {
-                // ?将错误return，消除unused的警告
-                self.config.selector.enable(&mut region, 0)?;
-                // 拷贝约束，本次的a = 前一次的b，本次的b = 前一次的c
-                pre_b
-                    .0
-                    .copy_advice(|| "a", &mut region, self.config.advice[0], 0)?;
-                pre_c
-                    .0
-                    .copy_advice(|| "b", &mut region, self.config.advice[1], 0)?;
-                // 计算本次的c = a + b = pre_b + pre_c
-                let c = region
-                    .assign_advice(
-                        || "c",
-                        self.config.advice[2],
-                        0,
-                        || pre_b.0.value().copied() + pre_c.0.value(),
-                    )
-                    .map(ACell)?;
-                Ok(c)
+                if n == 0 {
+                    Ok(a)
+                } else if n == 1 {
+                    Ok(b)
+                } else {
+                    for row in 1..n - 2 {
+                        a =
+                            b.0.copy_advice(|| "a", &mut region, self.config.advice[0], row)
+                                .map(ACell)?;
+                        b =
+                            c.0.copy_advice(|| "b", &mut region, self.config.advice[1], row)
+                                .map(ACell)?;
+                        // 计算本次的c = a + b = pre_b + pre_c
+                        c = region
+                            .assign_advice(
+                                || "f(n)",
+                                self.config.advice[2],
+                                row,
+                                || a.0.value().copied() + b.0.value().copied(),
+                            )
+                            .map(ACell)?;
+                    }
+                    Ok(c)
+                }
             },
         )
     }
@@ -197,16 +185,9 @@ impl<F: Field> Circuit<F> for FibonacciCircuit<F> {
     ) -> Result<(), Error> {
         let fibonacci_chip = FibonacciChip::construct(config);
 
-        let (_, mut pre_b, mut pre_c) =
-            fibonacci_chip.assign_first_row(layouter.namespace(|| "first row"))?;
+        let c = fibonacci_chip.assign_row(layouter.namespace(|| "next row"), 10)?;
 
-        for _i in 3..10 {
-            let c = fibonacci_chip.assign_row(layouter.namespace(|| "next row"), &pre_b, &pre_c)?;
-            pre_b = pre_c;
-            pre_c = c;
-        }
-
-        fibonacci_chip.expose_public(layouter.namespace(|| "out"), &pre_c, 2)?;
+        fibonacci_chip.expose_public(layouter.namespace(|| "out"), &c, 2)?;
 
         Ok(())
     }
