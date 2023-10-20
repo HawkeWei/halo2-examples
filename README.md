@@ -39,6 +39,17 @@ Assignment是一个电路赋值的接口。
 
 参考 [0xparc Halo2 课程](https://learn.0xparc.org/materials/halo2/learning-group-1/halo2-api)
 
+#### version 1
+
+该版本每行都要存储 f(i), f(i+1), f(i+2)  
+使用拷贝约束来赋值：a(n行) = b(n-1行), b(n行) = c(n-1行)  
+
+#### version 2
+
+该版本每行只需要存储f(n)  
+f(n行) = f(n-1行) + f(n-2行)  
+这里使用跨行实现多项式
+
 ## 附录：Halo2 资料整理
 
 - [halo2 book](https://zcash.github.io/halo2/design/proving-system.html)
