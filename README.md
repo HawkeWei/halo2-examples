@@ -1,5 +1,7 @@
 # Halo2 Examples
 
+使用Rust语言，使用halo2的标准库，实现一些常见的例子，学习halo2的使用
+
 ## 预备知识
 
 这里先简单介绍下Halo2中涉及到的结构和术语。
@@ -59,3 +61,9 @@ f(n行) = f(n-1行) + f(n-2行)
 - [halo2 入门 - axiom](https://docs.axiom.xyz/zero-knowledge-proofs/getting-started-with-halo2)
 - [halo2 lib - axiom](https://github.com/axiom-crypto/halo2-lib)
 - [halo2 circuit tools - taikoxyz](https://github.com/taikoxyz/circuit-tools)
+
+## 【Baby 系列】  
+
+- [baby bitcoin](https://github.com/brycewai/baby-bitcoin)
+- [baby groth16](https://github.com/brycewai/baby-groth16)
+- [baby halo2](https://github.com/brycewai/baby-halo2)
