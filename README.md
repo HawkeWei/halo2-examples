@@ -62,8 +62,8 @@ f(n行) = f(n-1行) + f(n-2行)
 - [halo2 lib - axiom](https://github.com/axiom-crypto/halo2-lib)
 - [halo2 circuit tools - taikoxyz](https://github.com/taikoxyz/circuit-tools)
 
-## 【Baby 系列】  
+## 【rua 系列】  
 
-- [baby bitcoin](https://github.com/brycewai/baby-bitcoin)
-- [baby groth16](https://github.com/brycewai/baby-groth16)
-- [baby halo2](https://github.com/brycewai/baby-halo2)
+- [rua bitcoin](https://github.com/brycewai/rua-bitcoin)
+- [rua groth16](https://github.com/brycewai/rua-groth16)
+- [rua halo2](https://github.com/brycewai/rua-halo2)
