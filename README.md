@@ -64,6 +64,6 @@ f(n行) = f(n-1行) + f(n-2行)
 
 ## 【rua 系列】  
 
-- [rua bitcoin](https://github.com/brycewai/rua-bitcoin)
-- [rua groth16](https://github.com/brycewai/rua-groth16)
-- [rua halo2](https://github.com/brycewai/rua-halo2)
+- [rua bitcoin](https://github.com/yewbs/rua-bitcoin)
+- [rua groth16](https://github.com/yewbs/rua-groth16)
+- [rua halo2](https://github.com/yewbs/rua-halo2)
